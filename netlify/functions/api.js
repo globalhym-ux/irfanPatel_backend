@@ -55,61 +55,48 @@
 
 const nodemailer = require('nodemailer');
 
-exports.handler = async (event, context) => {
-    // Check if Method is POST
+exports.handler = async (event) => {
     if (event.httpMethod !== "POST") {
         return { statusCode: 405, body: "Method Not Allowed" };
     }
 
     try {
         const data = JSON.parse(event.body);
-        const { name, email, phone, message } = data; // Jo fields aapke form mein hain
+        const { name, email, subject, message } = data;
 
-        // 1. SMTP Transporter (cPanel Settings)
+        // Gmail SMTP Setup (Use this because you don't have cPanel password)
         let transporter = nodemailer.createTransport({
-            host: "mail.irfanpatel.com", // cPanel ka outgoing server
-            port: 465, // SSL ke liye 465 best hai
-            secure: true, // true for 465
+            service: 'gmail',
             auth: {
-                user: process.env.EMAIL_USER, // info@irfanpatel.com
-                pass: process.env.EMAIL_PASS, // cPanel email password
+                user: process.env.EMAIL_USER, // Aapka Gmail address
+                pass: process.env.EMAIL_PASS, // Aapka Gmail App Password (16 digits)
             },
-            tls: {
-                rejectUnauthorized: false // Taake certificate issue na aaye
-            }
         });
 
-        // 2. Email Options (Dono mails yahan add hain)
         let mailOptions = {
-            from: `"Irfan Patel Website" <info@irfanpatel.com>`, 
-            to: "info@irfanpatel.com, muhammadirfanpatel@hotmail.com", // Comma se separate karein
-            subject: `New Inquiry from ${name}`,
+            from: `"Website Form" <${process.env.EMAIL_USER}>`,
+            // Yahan wo dono emails hain jahan mail jani chahiye
+            to: "info@irfanpatel.com, muhammadirfanpatel@hotmail.com", 
+            subject: `Contact Form: ${subject || 'New Message'}`,
             html: `
-                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
-                    <h2 style="color: #333;">New Website Message</h2>
-                    <p><strong>Name:</strong> ${name}</p>
-                    <p><strong>Sender Email:</strong> ${email}</p>
-                    <p><strong>Phone:</strong> ${phone || 'N/A'}</p>
-                    <p><strong>Message:</strong></p>
-                    <p style="background: #f9f9f9; padding: 10px; border-left: 5px solid #007bff;">${message}</p>
-                </div>
+                <h3>New Inquiry from Irfan Patel Website</h3>
+                <p><b>Name:</b> ${name}</p>
+                <p><b>Email:</b> ${email}</p>
+                <p><b>Message:</b></p>
+                <p>${message}</p>
             `,
         };
 
-        // 3. Send Email
         await transporter.sendMail(mailOptions);
 
         return {
             statusCode: 200,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: "success", message: "Email Sent Successfully!" }),
+            body: JSON.stringify({ status: "success", message: "Email Sent!" }),
         };
-
     } catch (error) {
-        console.error("Error details:", error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ status: "error", message: error.message }),
+            body: JSON.stringify({ status: "error", error: error.toString() }),
         };
     }
 };
