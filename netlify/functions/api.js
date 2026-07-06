@@ -56,11 +56,27 @@
 const nodemailer = require('nodemailer');
 
 exports.handler = async (event) => {
-    // Only allow POST requests
+    // 1. Define CORS headers
+    const headers = {
+        'Access-Control-Allow-Origin': '*', // Allows requests from any domain (including your local machine)
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    };
+
+    // 2. Handle the "Preflight" request (Sent by the browser automatically)
+    if (event.httpMethod === "OPTIONS") {
+        return {
+            statusCode: 200,
+            headers,
+            body: ''
+        };
+    }
+
+    // 3. Only allow POST requests for the actual form submission
     if (event.httpMethod !== "POST") {
         return { 
             statusCode: 405, 
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({ error: "Method Not Allowed" }) 
         };
     }
@@ -69,7 +85,6 @@ exports.handler = async (event) => {
         const data = JSON.parse(event.body);
         const { name, email, subject, message } = data;
 
-        // SMTP Setup (Using Gmail as discussed)
         let transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -88,7 +103,7 @@ exports.handler = async (event) => {
                     <p><strong>Name:</strong> ${name}</p>
                     <p><strong>Email:</strong> ${email}</p>
                     <p><strong>Message:</strong></p>
-                    <p style="background: #f4f4f4; padding: 15px;">${message}</p>
+                    <p style="background: #f4f4f4; padding: 15px; white-space: pre-line;">${message}</p>
                 </div>
             `,
         };
@@ -97,14 +112,14 @@ exports.handler = async (event) => {
 
         return {
             statusCode: 200,
-            headers: { 'Content-Type': 'application/json' },
+            headers, // Include CORS headers here
             body: JSON.stringify({ status: "success", message: "Email sent successfully" }),
         };
     } catch (error) {
         console.error("Function Error:", error);
         return {
             statusCode: 500,
-            headers: { 'Content-Type': 'application/json' },
+            headers, // Include CORS headers here
             body: JSON.stringify({ status: "error", error: error.message }),
         };
     }
