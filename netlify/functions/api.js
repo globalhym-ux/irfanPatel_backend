@@ -76,7 +76,7 @@ const nodemailer = require('nodemailer');
 const { createClient } = require('@supabase/supabase-js');
 
 // 🚀 1. Supabase Client Initialize
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://pzsrbgwvubnxgfnufsug.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://pzrmkiawjawjwuyjwmeo.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
 
 let supabase = null;
