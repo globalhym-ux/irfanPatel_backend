@@ -85,7 +85,7 @@ if (SUPABASE_URL && SUPABASE_KEY) {
 }
 
 exports.handler = async (event) => {
-    // 🚀 CORS: '*' ka matlab hai dunya ke har browser aur domain se form accept hoga (Zero CORS Error!)
+    
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization',
