@@ -85,14 +85,14 @@ if (SUPABASE_URL && SUPABASE_KEY) {
 }
 
 exports.handler = async (event) => {
-    
+    // 1. CORS Headers (Allow all origins to prevent CORS errors on live and localhost)
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     };
 
-    // Preflight (Browser ka pehla check)
+    // 2. Preflight (Browser Options Check)
     if (event.httpMethod === "OPTIONS") {
         return {
             statusCode: 200,
@@ -141,7 +141,7 @@ exports.handler = async (event) => {
         }
 
         // ==========================================
-        // 🚀 2. EMAIL ADMIN KO SEND KARNA (GMAIL)
+        // 🚀 2. EMAIL CLIENT KI COMPANY EMAIL PAR BHEJNA
         // ==========================================
         let transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -153,22 +153,34 @@ exports.handler = async (event) => {
 
         let mailOptions = {
             from: `"Irfan Patel Website" <${process.env.EMAIL_USER}>`,
-            to: "info@irfanpatel.com, muhammadirfanpatel@hotmail.com",
-            replyTo: cleanEmail || process.env.EMAIL_USER,
-            subject: `New Inquiry from ${cleanName}: ${subject || 'Consultation'}`,
+            
+            // 👈 Client ki company email address yahan set hai:
+            to: "info@irfanpatel.com",
+            
+            // Client ke "Reply" karne par jawab customer ke email par jayega:
+            replyTo: cleanEmail || "info@irfanpatel.com",
+
+            subject: `⚡ New Consultation Booking from ${cleanName}: ${subject || 'Inquiry'}`,
             html: `
                 <div style="font-family: Arial, sans-serif; padding: 25px; border: 1px solid #e5e7eb; border-radius: 8px; max-width: 600px; color: #1f2937;">
-                    <h2 style="color: #111827; border-bottom: 2px solid #f3f4f6; padding-bottom: 12px; margin-top: 0;">
-                        New Consultation Booking
-                    </h2>
-                    <p style="margin: 8px 0;"><strong>Name:</strong> ${cleanName}</p>
+                    <div style="background: #121820; color: #c5a059; padding: 15px; text-align: center; border-radius: 6px; margin-bottom: 20px;">
+                        <h2 style="margin: 0; text-transform: uppercase; letter-spacing: 1px; color: #ffffff;">New Website Consultation Booking</h2>
+                    </div>
+                    
+                    <p style="margin: 8px 0;"><strong>Client Name:</strong> ${cleanName}</p>
                     <p style="margin: 8px 0;"><strong>Email:</strong> ${cleanEmail ? `<a href="mailto:${cleanEmail}">${cleanEmail}</a>` : 'Not provided'}</p>
                     <p style="margin: 8px 0;"><strong>Phone:</strong> ${cleanPhone || 'Not provided'}</p>
                     <p style="margin: 8px 0;"><strong>Visitor ID:</strong> ${visitor_id || 'N/A'}</p>
-                    <p style="margin: 16px 0 8px 0;"><strong>Message:</strong></p>
+                    
+                    <p style="margin: 16px 0 8px 0;"><strong>Message / Requirements:</strong></p>
                     <div style="background: #f9fafb; padding: 15px; border-radius: 6px; border: 1px solid #e5e7eb; white-space: pre-line; line-height: 1.6;">
-                        ${message || 'No details entered.'}
+                        ${message || 'No additional details provided.'}
                     </div>
+
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0 10px;" />
+                    <p style="font-size: 11px; color: #9ca3af; text-align: center; margin: 0;">
+                        This inquiry was submitted from the official irfanpatel.com website.
+                    </p>
                 </div>
             `,
         };
