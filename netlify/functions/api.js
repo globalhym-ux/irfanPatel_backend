@@ -75,24 +75,35 @@
 const nodemailer = require('nodemailer');
 const { createClient } = require('@supabase/supabase-js');
 
-// Supabase Init
+// 🚀 1. Supabase Client Initialize
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://pzrmkiawjawjwuyjwmeo.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
 
 let supabase = null;
 if (SUPABASE_URL && SUPABASE_KEY) {
-    supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    supabase = createClient(SUPABASE_URL, SUPABASE_KEy);
 }
 
 exports.handler = async (event) => {
     
+    const allowedOrigins = [
+        'https://irfanpatel.com',
+        'https://www.irfanpatel.com',
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:3000/'
+    ];
+
+    const origin = event.headers.origin || event.headers.Origin;
+    const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+
     const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Origin': corsOrigin,
+        'Access-Control-Allow-Headers': 'Content-Type, Accept',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
     };
 
-    // Preflight (Browser ka pehla check)
+    // 3. Preflight Request
     if (event.httpMethod === "OPTIONS") {
         return {
             statusCode: 200,
@@ -113,36 +124,38 @@ exports.handler = async (event) => {
         const data = JSON.parse(event.body || '{}');
         const { name, email, phone, subject, message, visitor_id } = data;
 
+        // 🚀 4. NULL HANDLER: Agar email ya phone na ho, toh error na aaye balkay null set ho
         const cleanEmail = email && email.trim() !== '' ? email.trim() : null;
         const cleanPhone = phone && phone.trim() !== '' ? phone.trim() : null;
         const cleanName = name && name.trim() !== '' ? name.trim() : 'Anonymous';
 
-        // ==========================================
-        // 🚀 1. SUPABASE DATABASE MEIN SAVE KARNA
-        // ==========================================
+        // 🚀 5. SUPABASE DATABASE MEIN SAVE KARNA
         if (supabase) {
             try {
-                await supabase
+                const { error: dbError } = await supabase
                     .from('ip_form_submissions')
                     .insert([
                         {
                             visitor_id: visitor_id || 'unknown',
-                            form_name: subject || 'Consultation Inquiry',
+                            form_name: subject || 'Contact Form Submission',
                             name: cleanName,
-                            email: cleanEmail,
-                            phone: cleanPhone,
+                            email: cleanEmail,   // Missing hone par automatically null jayega
+                            phone: cleanPhone,   // Missing hone par automatically null jayega
                             all_fields: data
                         }
                     ]);
-                console.log('✅ Lead saved to Supabase (ip_form_submissions)');
+
+                if (dbError) {
+                    console.error('Supabase Save Error:', dbError.message);
+                } else {
+                    console.log('✅ Form submission saved in Supabase (ip_form_submissions)');
+                }
             } catch (dbErr) {
-                console.error('Supabase save error:', dbErr);
+                console.error('Database connection non-fatal error:', dbErr);
             }
         }
 
-        // ==========================================
-        // 🚀 2. EMAIL ADMIN KO SEND KARNA (GMAIL)
-        // ==========================================
+        // 🚀 6. NODEMAILER EMAIL SENDING
         let transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -152,22 +165,22 @@ exports.handler = async (event) => {
         });
 
         let mailOptions = {
-            from: `"Irfan Patel Website" <${process.env.EMAIL_USER}>`,
+            from: `"Website Contact" <${process.env.EMAIL_USER}>`,
             to: "info@irfanpatel.com, muhammadirfanpatel@hotmail.com",
             replyTo: cleanEmail || process.env.EMAIL_USER,
-            subject: `New Inquiry from ${cleanName}: ${subject || 'Consultation'}`,
+            subject: `New Inquiry: ${subject || 'No Subject'}`,
             html: `
                 <div style="font-family: Arial, sans-serif; padding: 25px; border: 1px solid #e5e7eb; border-radius: 8px; max-width: 600px; color: #1f2937;">
                     <h2 style="color: #111827; border-bottom: 2px solid #f3f4f6; padding-bottom: 12px; margin-top: 0;">
-                        New Consultation Booking
+                        New Form Submission
                     </h2>
                     <p style="margin: 8px 0;"><strong>Name:</strong> ${cleanName}</p>
                     <p style="margin: 8px 0;"><strong>Email:</strong> ${cleanEmail ? `<a href="mailto:${cleanEmail}">${cleanEmail}</a>` : 'Not provided'}</p>
                     <p style="margin: 8px 0;"><strong>Phone:</strong> ${cleanPhone || 'Not provided'}</p>
-                    <p style="margin: 8px 0;"><strong>Visitor ID:</strong> ${visitor_id || 'N/A'}</p>
+                    <p style="margin: 8px 0;"><strong>Visitor Cookie ID:</strong> ${visitor_id || 'N/A'}</p>
                     <p style="margin: 16px 0 8px 0;"><strong>Message:</strong></p>
                     <div style="background: #f9fafb; padding: 15px; border-radius: 6px; border: 1px solid #e5e7eb; white-space: pre-line; line-height: 1.6;">
-                        ${message || 'No details entered.'}
+                        ${message || 'No message content provided.'}
                     </div>
                 </div>
             `,
@@ -178,9 +191,8 @@ exports.handler = async (event) => {
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify({ status: "success", message: "Form submitted and lead saved successfully!" }),
+            body: JSON.stringify({ status: "success", message: "Form submitted and lead saved successfully" }),
         };
-
     } catch (error) {
         console.error("Function Error:", error);
         return {
