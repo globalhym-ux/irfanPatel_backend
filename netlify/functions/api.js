@@ -98,10 +98,10 @@ exports.handler = async (event) => {
     const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
 
     const headers = {
-    'Access-Control-Allow-Origin': '*', // 👈 Sabhi origins ko allow karega
-    'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-};
+        'Access-Control-Allow-Origin': corsOrigin,
+        'Access-Control-Allow-Headers': 'Content-Type, Accept',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    };
 
     // 3. Preflight Request
     if (event.httpMethod === "OPTIONS") {
