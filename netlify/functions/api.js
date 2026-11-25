@@ -141,7 +141,7 @@ exports.handler = async (event) => {
         }
 
         // ==========================================
-        // 🚀 2. EMAIL CLIENT KI COMPANY EMAIL PAR BHEJNA
+        // 🚀 2. EMAIL CLIENT KI COMPANY EMAIL PAR 
         // ==========================================
         let transporter = nodemailer.createTransport({
             service: 'gmail',
