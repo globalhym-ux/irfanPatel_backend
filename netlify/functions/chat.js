@@ -65,7 +65,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({ error: "Method Not Allowed" }),
     };
   }
-
+//chat function
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
