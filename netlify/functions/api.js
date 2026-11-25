@@ -154,10 +154,10 @@ exports.handler = async (event) => {
         let mailOptions = {
             from: `"Irfan Patel Website" <${process.env.EMAIL_USER}>`,
             
-            // 👈 Client ki company email address yahan set hai:
+            
             to: "info@irfanpatel.com",
             
-            // Client ke "Reply" karne par jawab customer ke email par jayega:
+            
             replyTo: cleanEmail || "info@irfanpatel.com",
 
             subject: `⚡ New Consultation Booking from ${cleanName}: ${subject || 'Inquiry'}`,
